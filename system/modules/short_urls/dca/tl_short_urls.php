@@ -80,7 +80,14 @@ $GLOBALS['TL_DCA']['tl_short_urls'] = array
 	// Palettes
 	'palettes' => array
 	(
-		'default'                     => '{shorturl_legend},name,domain,target,redirect,disable'
+		'__selector__'                => array('type'),
+		'default'                     => '{shorturl_legend},name,domain,type,redirect,disable'
+	),
+	// Subpalettes
+	'subpalettes' => array
+	(
+		'type_singlelanguage'         => 'target',
+		'type_multilanguage'          => 'target_multilanguage',
 	),
 
 	// Fields
@@ -115,6 +122,18 @@ $GLOBALS['TL_DCA']['tl_short_urls'] = array
 			'save_callback'           => array( array('tl_short_urls', 'validateDomain') ),
 			'sql'                     => "int(10) unsigned NOT NULL default '0'"
 		),
+		'type' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_short_urls']['type'],
+			'default'                 => 'singlelanguage',
+			'exclude'                 => true,
+			'filter'                  => true,
+			'inputType'               => 'radio',
+			'options'                 => array('singlelanguage', 'multilanguage'),
+			'reference'               => &$GLOBALS['TL_LANG']['tl_short_urls'],
+			'eval'                    => array('submitOnChange'=>true, 'helpwizard'=>true),
+			'sql'                     => "varchar(20) NOT NULL default ''"
+		),
 		'redirect' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_short_urls']['redirect'],
@@ -125,6 +144,49 @@ $GLOBALS['TL_DCA']['tl_short_urls'] = array
 			'reference'               => &$GLOBALS['TL_LANG']['tl_short_urls'],
 			'eval'                    => array('tl_class' => 'w50'),
 			'sql'                     => "varchar(32) NOT NULL default ''"
+		),
+		'target_multilanguage' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_short_urls']['target_multilanguage'],
+			'exclude'                 => true,
+			'inputType'               => 'multiColumnWizard',
+			'eval'                    => array
+			(
+				'columnFields'=>array
+				(
+					'multi_language' => array
+					(
+						'label'                 => &$GLOBALS['TL_LANG']['tl_short_urls']['multi_language'],
+						'exclude'               => true,
+						'inputType'             => 'justtextoption'
+					),
+					'multi_target' => array
+					(
+						'label'                   => &$GLOBALS['TL_LANG']['tl_short_urls']['target'],
+						'eval'                    => array
+						(
+							'rgxp'=>'url',
+							'decodeEntities'=>true,
+							'maxlength'=>255,
+							'fieldType'=>'radio',
+							'filesOnly'=>true,
+							'tl_class'=>'w50 wizard',
+							'style'=>'width:180px',
+							'mandatory'=>true
+						),
+						'wizard'                  => array( array('tl_short_urls', 'pagePicker') ),
+						'inputType'               => 'text',
+					),
+				),
+				'tl_class'=>'w50 clr',
+				'mandatory'=>true
+			),
+			'buttons'   =>  array('copy' => false, 'delete' => false, 'up' => false, 'down' => false),
+			'load_callback' => array
+			(
+				array('tl_short_urls', 'getTargets')
+			),
+			'sql'                     => "blob NULL"
 		),
 		'target' => array
 		(
@@ -365,4 +427,16 @@ class tl_short_urls extends Backend
 		// return the options
 		return $options;
 	}
+
+
+        public function getTargets($varValue, $dc)
+        {
+            $return = array();
+            $languages = \Database::getInstance()->prepare('SELECT DISTINCT language FROM tl_page')->execute()->fetchAllAssoc('language');
+            foreach ($languages as $language) {
+                
+            }
+            return array();
+        }
+
 }
